@@ -1,26 +1,974 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>DBMS Q&A – Searchable</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DBMS Lab • SQL &amp; PL/SQL</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --card2: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent2: #22c55e;
+  --danger: #f87171;
+  --border: #475569;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+header {
+  background: #020617;
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+.subtitle {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 2px;
+}
+.controls {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  padding: 0 20px;
+}
+.search-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+#search {
+  flex: 1;
+  min-width: 220px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+}
+#search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+.filter-btn {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .1s ease;
+}
+.filter-btn:hover { background: var(--card2); }
+.filter-btn.active {
+  background: var(--accent);
+  color: #0f172a;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.btn {
+  background: var(--card2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+.btn:hover { background: #475569; }
+.btn-primary {
+  background: var(--accent);
+  color: #0f172a;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.btn-success {
+  background: #166534;
+  color: #86efac;
+  border-color: #4ade80;
+}
+.container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px 60px;
+}
+.results-info {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.card-header {
+  padding: 14px 18px;
+  background: var(--card2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.badge {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.badge-schema { background: #1e3a8a; color: #93c5fd; }
+.badge-sql { background: #14532d; color: #86efac; }
+.badge-plsql { background: #854d0e; color: #fde047; }
+.card-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+  min-width: 180px;
+}
+.card-body {
+  padding: 14px 18px;
+}
+.desc {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin-bottom: 10px;
+}
+.code-wrap {
+  position: relative;
+  background: #0b1120;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+}
+pre.code {
+  margin: 0;
+  padding: 14px 16px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  overflow-x: auto;
+  white-space: pre;
+  max-height: 260px;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #1e293b;
+  color: #e0f2fe;
+  border: 1px solid #475569;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all .1s;
+  font-weight: 500;
+}
+.copy-btn:hover {
+  background: #334155;
+  color: white;
+}
+.copy-btn.copied {
+  background: #166534;
+  color: #86efac;
+  border-color: #4ade80;
+}
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #166534;
+  color: #86efac;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+  display: none;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+}
+.toast.show { display: flex; }
+.empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--muted);
+}
+.empty strong { color: var(--text); }
+footer {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+</style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>DBMS Q&A</h1>
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search question or SQL..."
-      />
-    </header>
 
-    <main id="qaContainer">
-      <!-- Cards injected by script.js -->
-    </main>
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>DBMS Lab • SQL &amp; PL/SQL</h1>
+      <div class="subtitle">Ready-to-run Oracle queries • Searchable • Copy with one click</div>
+    </div>
+    <div>
+      <a href="#schema" class="btn">Jump to Schema</a>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="search-row">
+    <input id="search" type="text" placeholder="Search queries, descriptions, code... (e.g. sailor, union, trigger)" autocomplete="off">
+    <button id="clearBtn" class="filter-btn">Clear</button>
   </div>
 
-  <script src="script.js"></script>
+  <div class="actions">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="schema">Schema</button>
+    <button class="filter-btn" data-filter="sql">SQL Queries</button>
+    <button class="filter-btn" data-filter="plsql">PL/SQL</button>
+
+    <button id="copyAllBtn" class="btn btn-primary">Copy All Visible</button>
+    <button id="expandBtn" class="btn">Expand All</button>
+    <button id="collapseBtn" class="btn">Collapse All</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="results-info">
+    <span id="count">Showing all items</span>
+  </div>
+
+  <div id="cards"></div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastText">Copied to clipboard!</span>
+</div>
+
+<script>
+// ==================== DATA ====================
+const items = [
+  // ========== SCHEMA ==========
+  {
+    id: "schema-full",
+    type: "schema",
+    title: "Full Schema Setup (All CREATE + INSERT + COMMIT)",
+    desc: "Run this first. Creates tables and loads all sample data.",
+    code: `-- FULL SCHEMA SETUP (Oracle)
+-- TABLES
+CREATE TABLE dept (
+  deptno NUMBER(2) PRIMARY KEY,
+  dname VARCHAR2(14),
+  loc VARCHAR2(13)
+);
+
+CREATE TABLE emp (
+  empno NUMBER(4) PRIMARY KEY,
+  ename VARCHAR2(10),
+  job VARCHAR2(9),
+  mgr NUMBER(4),
+  hiredate DATE,
+  sal NUMBER(7,2),
+  comm NUMBER(7,2),
+  deptno NUMBER(2),
+  CONSTRAINT fk_dept FOREIGN KEY (deptno) REFERENCES dept(deptno)
+);
+
+CREATE TABLE sailors (
+  sid NUMBER PRIMARY KEY,
+  sname VARCHAR2(20),
+  rating NUMBER,
+  age NUMBER
+);
+
+CREATE TABLE boats (
+  bid NUMBER PRIMARY KEY,
+  bname VARCHAR2(20),
+  color VARCHAR2(10)
+);
+
+CREATE TABLE reserves (
+  sid NUMBER,
+  bid NUMBER,
+  day DATE,
+  CONSTRAINT fk_sailors FOREIGN KEY (sid) REFERENCES sailors(sid),
+  CONSTRAINT fk_boats FOREIGN KEY (bid) REFERENCES boats(bid)
+);
+
+-- INSERT DATA
+-- DEPT
+INSERT INTO dept VALUES (10, 'ACCOUNTING', 'NEW YORK');
+INSERT INTO dept VALUES (20, 'RESEARCH', 'DALLAS');
+INSERT INTO dept VALUES (30, 'SALES', 'CHICAGO');
+INSERT INTO dept VALUES (40, 'OPERATIONS', 'BOSTON');
+
+-- EMP
+INSERT INTO emp VALUES (7369, 'SMITH', 'CLERK', 7902, TO_DATE('17-DEC-1980', 'DD-MON-YYYY'), 800, NULL, 20);
+INSERT INTO emp VALUES (7499, 'ALLEN', 'SALESMAN', 7698, TO_DATE('20-FEB-1981', 'DD-MON-YYYY'), 1600, 300, 30);
+INSERT INTO emp VALUES (7521, 'WARD', 'SALESMAN', 7698, TO_DATE('22-FEB-1981', 'DD-MON-YYYY'), 1250, 500, 30);
+INSERT INTO emp VALUES (7566, 'JONES', 'MANAGER', 7839, TO_DATE('02-APR-1981', 'DD-MON-YYYY'), 2975, NULL, 20);
+INSERT INTO emp VALUES (7654, 'MARTIN', 'SALESMAN', 7698, TO_DATE('28-SEP-1981', 'DD-MON-YYYY'), 1250, 1400, 30);
+INSERT INTO emp VALUES (7698, 'BLAKE', 'MANAGER', 7839, TO_DATE('01-MAY-1981', 'DD-MON-YYYY'), 2850, NULL, 30);
+INSERT INTO emp VALUES (7782, 'CLARK', 'MANAGER', 7839, TO_DATE('09-JUN-1981', 'DD-MON-YYYY'), 2450, NULL, 10);
+INSERT INTO emp VALUES (7788, 'SCOTT', 'ANALYST', 7566, TO_DATE('19-APR-1987', 'DD-MON-YYYY'), 3000, NULL, 20);
+INSERT INTO emp VALUES (7839, 'KING', 'PRESIDENT', NULL, TO_DATE('17-NOV-1981', 'DD-MON-YYYY'), 5000, NULL, 10);
+INSERT INTO emp VALUES (7844, 'TURNER', 'SALESMAN', 7698, TO_DATE('08-SEP-1981', 'DD-MON-YYYY'), 1500, 0, 30);
+INSERT INTO emp VALUES (7876, 'ADAMS', 'CLERK', 7788, TO_DATE('23-MAY-1987', 'DD-MON-YYYY'), 1100, NULL, 20);
+INSERT INTO emp VALUES (7900, 'JAMES', 'CLERK', 7698, TO_DATE('03-DEC-1981', 'DD-MON-YYYY'), 950, NULL, 30);
+INSERT INTO emp VALUES (7902, 'FORD', 'ANALYST', 7566, TO_DATE('03-DEC-1981', 'DD-MON-YYYY'), 3000, NULL, 20);
+INSERT INTO emp VALUES (7934, 'MILLER', 'CLERK', 7782, TO_DATE('23-JAN-1982', 'DD-MON-YYYY'), 1300, NULL, 10);
+
+-- SAILORS
+INSERT INTO sailors VALUES (22, 'Dustin', 7, 45);
+INSERT INTO sailors VALUES (29, 'Brutus', 1, 33);
+INSERT INTO sailors VALUES (31, 'Lubber', 8, 55);
+INSERT INTO sailors VALUES (32, 'Andy', 8, 25);
+INSERT INTO sailors VALUES (58, 'Rusty', 10, 35);
+INSERT INTO sailors VALUES (64, 'Horatio', 7, 35);
+INSERT INTO sailors VALUES (71, 'Zorba', 10, 16);
+INSERT INTO sailors VALUES (74, 'Horatio', 9, 35);
+INSERT INTO sailors VALUES (85, 'Art', 3, 25);
+INSERT INTO sailors VALUES (95, 'Bob', 3, 63);
+
+-- BOATS
+INSERT INTO boats VALUES (101, 'Interlake', 'blue');
+INSERT INTO boats VALUES (102, 'Interlake', 'red');
+INSERT INTO boats VALUES (103, 'Clipper', 'green');
+INSERT INTO boats VALUES (104, 'Marine', 'red');
+
+-- RESERVES
+INSERT INTO reserves VALUES (22, 101, TO_DATE('10-OCT-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (22, 102, TO_DATE('10-OCT-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (22, 103, TO_DATE('08-OCT-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (22, 104, TO_DATE('07-OCT-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (31, 102, TO_DATE('10-NOV-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (31, 103, TO_DATE('06-NOV-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (31, 104, TO_DATE('12-NOV-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (64, 101, TO_DATE('05-SEP-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (64, 102, TO_DATE('08-SEP-1998', 'DD-MON-YYYY'));
+INSERT INTO reserves VALUES (74, 103, TO_DATE('08-SEP-1998', 'DD-MON-YYYY'));
+
+COMMIT;
+`
+  },
+  {
+    id: "schema-creates",
+    type: "schema",
+    title: "CREATE TABLE Statements (only)",
+    desc: "Create all 5 tables.",
+    code: `CREATE TABLE dept (
+  deptno NUMBER(2) PRIMARY KEY,
+  dname VARCHAR2(14),
+  loc VARCHAR2(13)
+);
+
+CREATE TABLE emp (
+  empno NUMBER(4) PRIMARY KEY,
+  ename VARCHAR2(10),
+  job VARCHAR2(9),
+  mgr NUMBER(4),
+  hiredate DATE,
+  sal NUMBER(7,2),
+  comm NUMBER(7,2),
+  deptno NUMBER(2),
+  CONSTRAINT fk_dept FOREIGN KEY (deptno) REFERENCES dept(deptno)
+);
+
+CREATE TABLE sailors (
+  sid NUMBER PRIMARY KEY,
+  sname VARCHAR2(20),
+  rating NUMBER,
+  age NUMBER
+);
+
+CREATE TABLE boats (
+  bid NUMBER PRIMARY KEY,
+  bname VARCHAR2(20),
+  color VARCHAR2(10)
+);
+
+CREATE TABLE reserves (
+  sid NUMBER,
+  bid NUMBER,
+  day DATE,
+  CONSTRAINT fk_sailors FOREIGN KEY (sid) REFERENCES sailors(sid),
+  CONSTRAINT fk_boats FOREIGN KEY (bid) REFERENCES boats(bid)
+);`
+  },
+  {
+    id: "schema-inserts",
+    type: "schema",
+    title: "INSERT Statements (only)",
+    desc: "All INSERT statements for dept, emp, sailors, boats, reserves.",
+    code: `-- DEPT
+INSERT INTO dept VALUES (10, 'ACCOUNTING', 'NEW YORK');
+INSERT INTO dept VALUES (20, 'RESEARCH', 'DALLAS');
+INSERT INTO dept VALUES (30, 'SALES', 'CHICAGO');
+INSERT INTO dept VALUES (40, 'OPERATIONS', 'BOSTON');
+
+-- EMP (14 classic records)
+INSERT INTO emp VALUES (7369, 'SMITH', 'CLERK', 7902, TO_DATE('17-DEC-1980', 'DD-MON-YYYY'), 800, NULL, 20);
+INSERT INTO emp VALUES (7499, 'ALLEN', 'SALESMAN', 7698, TO_DATE('20-FEB-1981', 'DD-MON-YYYY'), 1600, 300, 30);
+INSERT INTO emp VALUES (7521, 'WARD', 'SALESMAN', 7698, TO_DATE('22-FEB-1981', 'DD-MON-YYYY'), 1250, 500, 30);
+INSERT INTO emp VALUES (7566, 'JONES', 'MANAGER', 7839, TO_DATE('02-APR-1981', 'DD-MON-YYYY'), 2975, NULL, 20);
+INSERT INTO emp VALUES (7654, 'MARTIN', 'SALESMAN', 7698, TO_DATE('28-SEP-1981', 'DD-MON-YYYY'), 1250, 1400, 30);
+INSERT INTO emp VALUES (7698, 'BLAKE', 'MANAGER', 7839, TO_DATE('01-MAY-1981', 'DD-MON-YYYY'), 2850, NULL, 30);
+INSERT INTO emp VALUES (7782, 'CLARK', 'MANAGER', 7839, TO_DATE('09-JUN-1981', 'DD-MON-YYYY'), 2450, NULL, 10);
+INSERT INTO emp VALUES (7788, 'SCOTT', 'ANALYST', 7566, TO_DATE('19-APR-1987', 'DD-MON-YYYY'), 3000, NULL, 20);
+INSERT INTO emp VALUES (7839, 'KING', 'PRESIDENT', NULL, TO_DATE('17-NOV-1981', 'DD-MON-YYYY'), 5000, NULL, 10);
+INSERT INTO emp VALUES (7844, 'TURNER', 'SALESMAN', 7698, TO_DATE('08-SEP-1981', 'DD-MON-YYYY'), 1500, 0, 30);
+INSERT INTO emp VALUES (7876, 'ADAMS', 'CLERK', 7788, TO_DATE('23-MAY-1987', 'DD-MON-YYYY'), 1100, NULL, 20);
+INSERT INTO emp VALUES (7900, 'JAMES', 'CLERK', 7698, TO_DATE('03-DEC-1981', 'DD-MON-YYYY'), 950, NULL, 30);
+INSERT INTO emp VALUES (7902, 'FORD', 'ANALYST', 7566, TO_DATE('03-DEC-1981', 'DD-MON-YYYY'), 3000, NULL, 20);
+INSERT INTO emp VALUES (7934, 'MILLER', 'CLERK', 7782, TO_DATE('23-JAN-1982', 'DD-MON-YYYY'), 1300, NULL, 10);
+
+-- SAILORS
+INSERT INTO sailors VALUES (22,'Dustin',7,45);
+INSERT INTO sailors VALUES (29,'Brutus',1,33);
+INSERT INTO sailors VALUES (31,'Lubber',8,55);
+INSERT INTO sailors VALUES (32,'Andy',8,25);
+INSERT INTO sailors VALUES (58,'Rusty',10,35);
+INSERT INTO sailors VALUES (64,'Horatio',7,35);
+INSERT INTO sailors VALUES (71,'Zorba',10,16);
+INSERT INTO sailors VALUES (74,'Horatio',9,35);
+INSERT INTO sailors VALUES (85,'Art',3,25);
+INSERT INTO sailors VALUES (95,'Bob',3,63);
+
+-- BOATS
+INSERT INTO boats VALUES (101,'Interlake','blue');
+INSERT INTO boats VALUES (102,'Interlake','red');
+INSERT INTO boats VALUES (103,'Clipper','green');
+INSERT INTO boats VALUES (104,'Marine','red');
+
+-- RESERVES
+INSERT INTO reserves VALUES (22,101,TO_DATE('10-OCT-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (22,102,TO_DATE('10-OCT-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (22,103,TO_DATE('08-OCT-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (22,104,TO_DATE('07-OCT-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (31,102,TO_DATE('10-NOV-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (31,103,TO_DATE('06-NOV-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (31,104,TO_DATE('12-NOV-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (64,101,TO_DATE('05-SEP-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (64,102,TO_DATE('08-SEP-1998','DD-MON-YYYY'));
+INSERT INTO reserves VALUES (74,103,TO_DATE('08-SEP-1998','DD-MON-YYYY'));
+
+COMMIT;`
+  },
+
+  // ========== SQL QUERIES ==========
+  { id: "q1", type: "sql", title: "1. Drop commission column", desc: "Remove comm column from emp table.", code: "ALTER TABLE emp DROP COLUMN comm;" },
+  { id: "q2", type: "sql", title: "2. Delete employee 7499", desc: "Delete record where empno = 7499 and commit.", code: "DELETE FROM emp WHERE empno = 7499;\nCOMMIT;" },
+  { id: "q3", type: "sql", title: "3. Salary between 1000 and 2000", desc: "List employee name and salary in given range, sorted.", code: "SELECT ename, sal FROM emp\nWHERE sal BETWEEN 1000 AND 2000\nORDER BY sal;" },
+  { id: "q4", type: "sql", title: "4. Employee name, deptno and location (JOIN)", desc: "Join emp and dept to show employee with location.", code: "SELECT e.ename, e.deptno, d.loc\nFROM emp e\nJOIN dept d ON e.deptno = d.deptno\nORDER BY e.deptno;" },
+  { id: "q5", type: "sql", title: "5. Alter sailors age to INTEGER", desc: "Change datatype of age column.", code: "ALTER TABLE sailors MODIFY age INTEGER;" },
+  { id: "q6", type: "sql", title: "6. All sailors name and age", desc: "List name and age of all sailors, sorted by name.", code: "SELECT sname, age FROM sailors ORDER BY sname;" },
+  { id: "q7", type: "sql", title: "7. Sailors who reserved boat 103 (Nested)", desc: "Sailors that reserved boat id 103 using subquery.", code: "SELECT sname FROM sailors\nWHERE sid IN (SELECT sid FROM reserves WHERE bid = 103);" },
+  { id: "q8", type: "sql", title: "8. Red or Green boat sailors (UNION)", desc: "Sailors who reserved red OR green boats.", code: "(SELECT s.sname\n FROM sailors s\n JOIN reserves r ON s.sid = r.sid\n JOIN boats b ON r.bid = b.bid\n WHERE b.color = 'red')\nUNION\n(SELECT s.sname\n FROM sailors s\n JOIN reserves r ON s.sid = r.sid\n JOIN boats b ON r.bid = b.bid\n WHERE b.color = 'green');" },
+  { id: "q9", type: "sql", title: "9. Employees ordered by dept and salary (DESC)", desc: "Show name, sal, deptno sorted by deptno desc then sal desc.", code: "SELECT ename, sal, deptno FROM emp\nORDER BY deptno DESC, sal DESC;" },
+  { id: "q10", type: "sql", title: "10. Job starts with A and ends with T", desc: "Employees whose job matches A...T pattern.", code: "SELECT ename, job FROM emp WHERE job LIKE 'A%T';" },
+  { id: "q11", type: "sql", title: "11. Not managers", desc: "Employees who are not managers.", code: "SELECT ename FROM emp WHERE job != 'MANAGER';" },
+  { id: "q12", type: "sql", title: "12. Employees not in depts 10, 30, 40", desc: "Exclude employees from departments 10, 30 and 40.", code: "SELECT ename FROM emp WHERE deptno NOT IN (10, 30, 40);" },
+  { id: "q13", type: "sql", title: "13. Youngest sailor per rating", desc: "Minimum age for each rating group.", code: "SELECT rating, MIN(age) AS youngest\nFROM sailors\nGROUP BY rating;" },
+  { id: "q14", type: "sql", title: "14. Sailors older than oldest rating 10", desc: "Sailors older than the oldest sailor with rating 10.", code: "SELECT sname FROM sailors\nWHERE age > (SELECT MAX(age) FROM sailors WHERE rating = 10);" },
+  { id: "q15", type: "sql", title: "15. Better than SOME Horatio (ANY)", desc: "Sailors with rating better than at least one Horatio.", code: "SELECT sname, rating FROM sailors\nWHERE rating > ANY (SELECT rating FROM sailors WHERE sname = 'Horatio');" },
+  { id: "q16", type: "sql", title: "16. Sailors who reserved ALL boats", desc: "Sailors who have a reservation for every boat.", code: "SELECT sid FROM reserves\nGROUP BY sid\nHAVING COUNT(DISTINCT bid) = (SELECT COUNT(*) FROM boats);" },
+  { id: "q17", type: "sql", title: "17. Employees by hiredate DESC", desc: "List employees ordered by most recent hire date.", code: "SELECT ename, hiredate FROM emp ORDER BY hiredate DESC;" },
+  { id: "q18", type: "sql", title: "18. Delete all employees from dept 20", desc: "Delete employees in department 20 and commit.", code: "DELETE FROM emp WHERE deptno = 20;\nCOMMIT;" },
+  { id: "q19", type: "sql", title: "19. Distinct jobs", desc: "List unique job titles.", code: "SELECT DISTINCT job FROM emp;" },
+  { id: "q20", type: "sql", title: "20. PF = 10% of salary", desc: "Calculate PF as 10 percent of salary.", code: "SELECT ename, sal, sal * 0.1 AS PF FROM emp;" },
+  { id: "q21", type: "sql", title: "21. Sailors who reserved at least one boat", desc: "Distinct sailors with at least one reservation.", code: "SELECT DISTINCT s.sname FROM sailors s\nJOIN reserves r ON s.sid = r.sid;" },
+  { id: "q22", type: "sql", title: "22. Sailors with rating greater than 7", desc: "List sailors who have rating > 7.", code: "SELECT sname FROM sailors WHERE rating > 7;" },
+  { id: "q23", type: "sql", title: "23. Sailor name begins and ends with B", desc: "Sailors whose name is like B...B.", code: "SELECT sname, age FROM sailors WHERE sname LIKE 'B%B';" },
+  { id: "q24", type: "sql", title: "24. Red but NOT green (MINUS)", desc: "Sailors who reserved red boats but never green boats.", code: "(SELECT r.sid FROM reserves r JOIN boats b ON r.bid = b.bid WHERE b.color = 'red')\nMINUS\n(SELECT r.sid FROM reserves r JOIN boats b ON r.bid = b.bid WHERE b.color = 'green');" },
+  { id: "q25", type: "sql", title: "25. Maximum salary of salesmen", desc: "Highest salary among employees with job SALESMAN.", code: "SELECT MAX(sal) FROM emp WHERE job = 'SALESMAN';" },
+  { id: "q26", type: "sql", title: "26. Alter salary column precision", desc: "Change sal column to NUMBER(10,2).", code: "ALTER TABLE emp MODIFY sal NUMBER(10,2);" },
+  { id: "q27", type: "sql", title: "27. Job-wise aggregates (SUM, MAX, MIN, AVG)", desc: "Group employees by job and compute salary stats.", code: "SELECT job,\n       SUM(sal) AS total,\n       MAX(sal) AS maxs,\n       MIN(sal) AS mins,\n       AVG(sal) AS avgs\nFROM emp\nGROUP BY job;" },
+  { id: "q28", type: "sql", title: "28. Department-wise employee count", desc: "Number of employees in each department.", code: "SELECT deptno, COUNT(*) AS emp_count FROM emp GROUP BY deptno;" },
+  { id: "q29", type: "sql", title: "29. Red or Green again (UNION)", desc: "Same as query 8 (Red or Green boat sailors).", code: "(SELECT s.sname FROM sailors s JOIN reserves r ON s.sid = r.sid JOIN boats b ON r.bid = b.bid WHERE b.color = 'red')\nUNION\n(SELECT s.sname FROM sailors s JOIN reserves r ON s.sid = r.sid JOIN boats b ON r.bid = b.bid WHERE b.color = 'green');" },
+  { id: "q30", type: "sql", title: "30. Better than ALL Horatio", desc: "Sailors with rating strictly greater than every Horatio.", code: "SELECT sname FROM sailors\nWHERE rating > ALL (SELECT rating FROM sailors WHERE sname = 'Horatio');" },
+  { id: "q31", type: "sql", title: "31. Oldest sailor", desc: "Sailor(s) with maximum age.", code: "SELECT sname, age FROM sailors\nWHERE age = (SELECT MAX(age) FROM sailors);" },
+  { id: "q32", type: "sql", title: "32. Youngest sailor eligible to vote", desc: "Minimum age among sailors aged 18 or older.", code: "SELECT MIN(age) FROM sailors WHERE age >= 18;" },
+  { id: "q33", type: "sql", title: "33. Sailors who never reserved a red boat", desc: "Nested NOT IN query for sailors without red boat reservation.", code: "SELECT sname FROM sailors\nWHERE sid NOT IN (\n  SELECT r.sid FROM reserves r\n  JOIN boats b ON r.bid = b.bid\n  WHERE b.color = 'red'\n);" },
+  { id: "q34", type: "sql", title: "34. Boat colors reserved by Lubber", desc: "Distinct colors of boats reserved by sailor named Lubber.", code: "SELECT DISTINCT b.color FROM boats b\nJOIN reserves r ON b.bid = r.bid\nWHERE r.sid = (SELECT sid FROM sailors WHERE sname = 'Lubber');" },
+  { id: "q35", type: "sql", title: "35. Sailor name starts with D", desc: "Sailors whose name begins with letter D.", code: "SELECT sname FROM sailors WHERE sname LIKE 'D%';" },
+  { id: "q37", type: "sql", title: "37. Employees not eligible for commission", desc: "Employees where commission is NULL or zero.", code: "SELECT ename FROM emp WHERE comm IS NULL OR comm = 0;" },
+  { id: "q39", type: "sql", title: "39. Average salary per job", desc: "Average salary grouped by job title.", code: "SELECT job, AVG(sal) AS avg_salary FROM emp GROUP BY job;" },
+  { id: "q40", type: "sql", title: "40. Employees with no manager (President)", desc: "Employees where mgr is NULL.", code: "SELECT ename, job FROM emp WHERE mgr IS NULL;" },
+
+  // ========== PL/SQL ==========
+  {
+    id: "pl1",
+    type: "plsql",
+    title: "PL/SQL 1. Swap two numbers (Procedure)",
+    desc: "IN OUT parameters to swap two numbers and print result.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE swap_numbers(a IN OUT NUMBER, b IN OUT NUMBER) IS
+  temp NUMBER;
+BEGIN
+  temp := a;
+  a := b;
+  b := temp;
+  DBMS_OUTPUT.PUT_LINE('After Swap: a=' || a || ' b=' || b);
+END;
+/`
+  },
+  {
+    id: "pl2",
+    type: "plsql",
+    title: "PL/SQL 2. Update salary by percentage (Procedure)",
+    desc: "Increase salary of one employee by given percent.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE update_salary(p_empno IN NUMBER, p_perc IN NUMBER) IS
+BEGIN
+  UPDATE emp SET sal = sal * (1 + p_perc / 100)
+  WHERE empno = p_empno;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Salary Updated');
+END;
+/`
+  },
+  {
+    id: "pl3",
+    type: "plsql",
+    title: "PL/SQL 3. Max of two numbers (Function)",
+    desc: "Returns the larger of two numbers.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE FUNCTION max_of_two(x NUMBER, y NUMBER) RETURN NUMBER IS
+BEGIN
+  IF x > y THEN
+    RETURN x;
+  ELSE
+    RETURN y;
+  END IF;
+END;
+/`
+  },
+  {
+    id: "pl4",
+    type: "plsql",
+    title: "PL/SQL 4. Cursor to print all employees",
+    desc: "Explicit cursor to loop and display empno, ename, sal, deptno.",
+    code: `SET SERVEROUTPUT ON;
+
+DECLARE
+  CURSOR c1 IS
+    SELECT empno, ename, sal, deptno FROM emp;
+
+  v_empno emp.empno%TYPE;
+  v_ename emp.ename%TYPE;
+  v_sal   emp.sal%TYPE;
+  v_dno   emp.deptno%TYPE;
+BEGIN
+  OPEN c1;
+  LOOP
+    FETCH c1 INTO v_empno, v_ename, v_sal, v_dno;
+    EXIT WHEN c1%NOTFOUND;
+    DBMS_OUTPUT.PUT_LINE(v_empno || ' | ' || v_ename || ' | ' || v_sal || ' | ' || v_dno);
+  END LOOP;
+  CLOSE c1;
+END;
+/`
+  },
+  {
+    id: "pl5",
+    type: "plsql",
+    title: "PL/SQL 5. Fibonacci series (Procedure)",
+    desc: "Print first n Fibonacci numbers using loop.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE fib_series(n IN NUMBER) IS
+  a NUMBER := 0;
+  b NUMBER := 1;
+  c NUMBER;
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('Fibonacci series:');
+  DBMS_OUTPUT.PUT_LINE(a);
+  DBMS_OUTPUT.PUT_LINE(b);
+
+  FOR i IN 3..n LOOP
+    c := a + b;
+    DBMS_OUTPUT.PUT_LINE(c);
+    a := b;
+    b := c;
+  END LOOP;
+END;
+/`
+  },
+  {
+    id: "pl6",
+    type: "plsql",
+    title: "PL/SQL 6. Update salary by job (Procedure)",
+    desc: "Give different percentage raises to MANAGER, SALESMAN, and others.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE update_sal_by_job IS
+BEGIN
+  UPDATE emp SET sal = sal * 1.20 WHERE job = 'MANAGER';
+  UPDATE emp SET sal = sal * 1.15 WHERE job = 'SALESMAN';
+  UPDATE emp SET sal = sal * 1.10 WHERE job NOT IN ('MANAGER', 'SALESMAN');
+
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Salary updated by job category');
+END;
+/`
+  },
+  {
+    id: "pl7",
+    type: "plsql",
+    title: "PL/SQL 7. Trigger - Prevent NULL or duplicate SID",
+    desc: "BEFORE INSERT/UPDATE trigger on sailors to validate sid.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE TRIGGER trg_sailors_sid
+BEFORE INSERT OR UPDATE ON sailors
+FOR EACH ROW
+BEGIN
+  IF :NEW.sid IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20001, 'SID cannot be null');
+  END IF;
+
+  IF :NEW.sid IN (
+        SELECT sid FROM sailors
+        WHERE sid = :NEW.sid
+          AND sid != NVL(:OLD.sid, -999)
+      ) THEN
+    RAISE_APPLICATION_ERROR(-20002, 'Duplicate SID');
+  END IF;
+END;
+/`
+  },
+  {
+    id: "pl8",
+    type: "plsql",
+    title: "PL/SQL 8. Trigger - No salary update if comm NULL",
+    desc: "Prevent salary changes for employees without commission.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE TRIGGER trg_no_sal_update
+BEFORE UPDATE OF sal ON emp
+FOR EACH ROW
+BEGIN
+  IF :OLD.comm IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20003, 'Cannot update salary when commission is null');
+  END IF;
+END;
+/`
+  },
+  {
+    id: "pl9",
+    type: "plsql",
+    title: "PL/SQL 9. Trigger - Update salary when comm changes",
+    desc: "AFTER UPDATE trigger: add 50% of new commission to salary.",
+    code: `SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE TRIGGER trg_update_sal_comm
+AFTER UPDATE OF comm ON emp
+FOR EACH ROW
+WHEN (NEW.comm IS NOT NULL)
+BEGIN
+  UPDATE emp
+  SET sal = sal + (:NEW.comm * 0.5)
+  WHERE empno = :NEW.empno;
+END;
+/`
+  }
+];
+
+// ==================== RENDER & FILTER ====================
+const cardsContainer = document.getElementById('cards');
+const searchInput = document.getElementById('search');
+const countEl = document.getElementById('count');
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toastText');
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function render(itemsToShow) {
+  cardsContainer.innerHTML = '';
+
+  if (itemsToShow.length === 0) {
+    cardsContainer.innerHTML = `
+      <div class="empty">
+        <strong>No matches found.</strong><br>
+        Try a different search term or filter.
+      </div>`;
+    countEl.textContent = '0 results';
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  itemsToShow.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.type = item.type;
+    card.dataset.id = item.id;
+
+    const badgeClass = item.type === 'schema' ? 'badge-schema' :
+                       item.type === 'sql' ? 'badge-sql' : 'badge-plsql';
+
+    const badgeLabel = item.type === 'schema' ? 'SCHEMA' :
+                       item.type === 'sql' ? 'SQL' : 'PL/SQL';
+
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="badge ${badgeClass}">${badgeLabel}</span>
+        <h3 class="card-title">${escapeHtml(item.title)}</h3>
+        <button class="copy-btn" data-copy-id="${item.id}">📋 Copy</button>
+      </div>
+      <div class="card-body">
+        <div class="desc">${escapeHtml(item.desc)}</div>
+        <div class="code-wrap">
+          <button class="copy-btn" data-copy-id="${item.id}" style="position:absolute;top:8px;right:8px;">📋 Copy</button>
+          <pre class="code"><code>${escapeHtml(item.code)}</code></pre>
+        </div>
+      </div>
+    `;
+
+    // attach listeners for copy buttons inside this card
+    const copyBtns = card.querySelectorAll('.copy-btn');
+    copyBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopImmediatePropagation();
+        copyToClipboard(item.code, btn);
+      });
+    });
+
+    frag.appendChild(card);
+  });
+
+  cardsContainer.appendChild(frag);
+  countEl.textContent = `Showing ${itemsToShow.length} / ${items.length} items`;
+}
+
+function filterAndRender() {
+  const term = currentSearch.trim().toLowerCase();
+
+  let filtered = items;
+
+  // type filter
+  if (currentFilter !== 'all') {
+    filtered = filtered.filter(i => i.type === currentFilter);
+  }
+
+  // search filter
+  if (term) {
+    filtered = filtered.filter(i =>
+      i.title.toLowerCase().includes(term) ||
+      i.desc.toLowerCase().includes(term) ||
+      i.code.toLowerCase().includes(term)
+    );
+  }
+
+  render(filtered);
+}
+
+function copyToClipboard(text, btnElement) {
+  const originalText = btnElement.innerHTML;
+
+  navigator.clipboard.writeText(text).then(() => {
+    btnElement.innerHTML = '✅ Copied!';
+    btnElement.classList.add('copied');
+
+    showToast('Copied to clipboard!');
+
+    setTimeout(() => {
+      btnElement.innerHTML = originalText;
+      btnElement.classList.remove('copied');
+    }, 1400);
+  }).catch(() => {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+
+    btnElement.innerHTML = '✅ Copied!';
+    btnElement.classList.add('copied');
+    showToast('Copied (fallback)!');
+
+    setTimeout(() => {
+      btnElement.innerHTML = originalText;
+      btnElement.classList.remove('copied');
+    }, 1400);
+  });
+}
+
+function showToast(msg) {
+  toastText.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+// ==================== FILTER BUTTONS ====================
+document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    filterAndRender();
+  });
+});
+
+// ==================== SEARCH ====================
+searchInput.addEventListener('input', () => {
+  currentSearch = searchInput.value;
+  filterAndRender();
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  searchInput.value = '';
+  currentSearch = '';
+  filterAndRender();
+  searchInput.focus();
+});
+
+// ==================== COPY ALL VISIBLE ====================
+document.getElementById('copyAllBtn').addEventListener('click', () => {
+  const visibleCards = Array.from(cardsContainer.querySelectorAll('.card'));
+  if (visibleCards.length === 0) return;
+
+  const texts = [];
+  visibleCards.forEach(card => {
+    const id = card.dataset.id;
+    const item = items.find(i => i.id === id);
+    if (item) {
+      texts.push(`-- ${item.title}\n${item.code}`);
+    }
+  });
+
+  const combined = texts.join('\n\n' + '--'.repeat(30) + '\n\n');
+
+  navigator.clipboard.writeText(combined).then(() => {
+    showToast(`Copied ${visibleCards.length} queries!`);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = combined;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(`Copied ${visibleCards.length} queries (fallback)!`);
+  });
+});
+
+// ==================== EXPAND / COLLAPSE (simple scroll height toggle) ====================
+let codesExpanded = false;
+
+document.getElementById('expandBtn').addEventListener('click', () => {
+  document.querySelectorAll('.code').forEach(pre => {
+    pre.style.maxHeight = 'none';
+  });
+  codesExpanded = true;
+});
+
+document.getElementById('collapseBtn').addEventListener('click', () => {
+  document.querySelectorAll('.code').forEach(pre => {
+    pre.style.maxHeight = '260px';
+  });
+  codesExpanded = false;
+});
+
+// ==================== KEYBOARD SHORTCUTS ====================
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === 'Escape' && document.activeElement === searchInput) {
+    searchInput.blur();
+  }
+});
+
+// Click on header of card to scroll to top of it (nice touch)
+cardsContainer.addEventListener('click', (e) => {
+  const header = e.target.closest('.card-header');
+  if (header && !e.target.closest('.copy-btn')) {
+    header.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+});
+
+// ==================== INITIAL RENDER ====================
+function init() {
+  // initial render
+  render(items);
+
+  // Make sure all filter buttons start correctly
+  const allBtn = document.querySelector('.filter-btn[data-filter="all"]');
+  if (allBtn) allBtn.classList.add('active');
+
+  // Optional: show a little help toast once on load
+  setTimeout(() => {
+    // don't auto-toast on every reload
+  }, 2500);
+}
+
+init();
+</script>
+
 </body>
 </html>
